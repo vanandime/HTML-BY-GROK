@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SuperFeed — TikTok × Instagram</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        surface: {
+                            900: '#0a0a0a',
+                            800: '#121212',
+                            700: '#1a1a1a',
+                            600: '#262626'
+                        },
+                        accent: {
+                            pink: '#fe2c55',
+                            blue: '#3b82f6'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #0a0a0a;
+            color: #f5f5f5;
+            overscroll-behavior: none;
+        }
+        ::-webkit-scrollbar { width: 0; height: 0; }
+        
+        .feed-container {
+            height: calc(100dvh - 56px);
+            scroll-snap-type: y mandatory;
+            overflow-y: scroll;
+            -webkit-overflow-scrolling: touch;
+        }
+        .feed-item {
+            scroll-snap-align: start;
+            height: calc(100dvh - 56px);
+            position: relative;
+        }
+        .glass {
+            background: rgba(18, 18, 18, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .story-ring {
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+        }
+    </style>
+</head>
+<body class="bg-surface-900 text-white antialiased overflow-hidden">
+
+    <!-- ========== APP ROOT ========== -->
+    <div id="app" class="relative h-dvh flex flex-col">
+
+        <!-- Top Stories Bar (Instagram style) -->
+        <div id="stories-bar" class="flex-shrink-0 glass border-b border-white/5 px-3 py-3 overflow-x-auto flex gap-4 z-30">
+            <!-- Stories akan di-render di sini -->
+        </div>
+
+        <!-- Main Vertical Feed (TikTok style) -->
+        <main id="main-feed" class="feed-container flex-1 relative">
+            <!-- Feed items akan di-render di sini -->
+        </main>
+
+        <!-- Bottom Navigation (Instagram + TikTok hybrid) -->
+        <nav class="flex-shrink-0 h-14 glass border-t border-white/5 flex items-center justify-around z-40">
+            <button data-tab="home" class="nav-btn flex flex-col items-center gap-0.5 text-white">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                <span class="text-[10px] font-medium">Home</span>
+            </button>
+            <button data-tab="discover" class="nav-btn flex flex-col items-center gap-0.5 text-white/60">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <span class="text-[10px] font-medium">Discover</span>
+            </button>
+            <button data-tab="create" class="nav-btn flex flex-col items-center gap-0.5 -mt-4">
+                <div class="w-12 h-8 rounded-lg bg-gradient-to-r from-accent-pink to-purple-600 flex items-center justify-center shadow-lg">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+                </div>
+            </button>
+            <button data-tab="inbox" class="nav-btn flex flex-col items-center gap-0.5 text-white/60">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="m22 6-10 7L2 6"/></svg>
+                <span class="text-[10px] font-medium">Inbox</span>
+            </button>
+            <button data-tab="profile" class="nav-btn flex flex-col items-center gap-0.5 text-white/60">
+                <div class="w-6 h-6 rounded-full bg-surface-600 overflow-hidden">
+                    <img id="nav-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" class="w-full h-full object-cover" alt="">
+                </div>
+                <span class="text-[10px] font-medium">Profile</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- ========== TEMPLATES ========== -->
+    <template id="tpl-story">
+        <div class="flex flex-col items-center gap-1 flex-shrink-0 cursor-pointer">
+            <div class="story-ring p-[2px] rounded-full">
+                <div class="w-14 h-14 rounded-full bg-surface-800 p-[2px]">
+                    <img class="story-avatar w-full h-full rounded-full object-cover" src="" alt="">
+                </div>
+            </div>
+            <span class="story-name text-[11px] text-white/80 max-w-[64px] truncate"></span>
+        </div>
+    </template>
+
+    <template id="tpl-feed-item">
+        <article class="feed-item relative bg-black">
+            <!-- Media (video / image) -->
+            <div class="absolute inset-0">
+                <img class="feed-media w-full h-full object-cover" src="" alt="">
+                <!-- Overlay gradient -->
+                <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70"></div>
+            </div>
+
+            <!-- Right action bar (TikTok style) -->
+            <div class="absolute right-3 bottom-28 flex flex-col items-center gap-5 z-20">
+                <button class="action-btn flex flex-col items-center gap-1">
+                    <div class="w-12 h-12 rounded-full bg-white/10 backdrop-blur flex items-center justify-center">
+                        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    </div>
+                    <span class="like-count text-xs font-semibold">0</span>
+                </button>
+                <button class="action-btn flex flex-col items-center gap-1">
+                    <div class="w-12 h-12 rounded-full bg-white/10 backdrop-blur flex items-center justify-center">
+                        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M21.99 4c0-1.1-.89-2-1.99-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h14l4 4-.01-18z"/></svg>
+                    </div>
+                    <span class="comment-count text-xs font-semibold">0</span>
+                </button>
+                <button class="action-btn flex flex-col items-center gap-1">
+                    <div class="w-12 h-12 rounded-full bg-white/10 backdrop-blur flex items-center justify-center">
+                        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg>
+                    </div>
+                    <span class="share-count text-xs font-semibold">0</span>
+                </button>
+            </div>
+
+            <!-- Bottom info (caption + user) -->
+            <div class="absolute left-0 right-16 bottom-4 px-4 z-20">
+                <div class="flex items-center gap-2 mb-2">
+                    <img class="user-avatar w-9 h-9 rounded-full object-cover border border-white/20" src="" alt="">
+                    <span class="user-name font-semibold text-sm"></span>
+                    <button class="follow-btn text-xs font-semibold border border-white/40 px-3 py-0.5 rounded-md">Follow</button>
+                </div>
+                <p class="caption text-sm leading-snug line-clamp-2"></p>
+                <p class="music text-xs text-white/70 mt-1 flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                    <span class="music-title"></span>
+                </p>
+            </div>
+        </article>
+    </template>
+
+    <!-- ========== CORE STATE & CONFIG ========== -->
+    <script>
+        // === CONFIG (siap production) ===
+        const CONFIG = {
+            github: {
+                token: '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',
+                owner: '',          // diisi user nanti
+                repo: '',           // diisi user nanti
+                path: 'data/superfeed-state.json',
+                branch: 'main'
+            },
+            openRouter: {
+                key: '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',
+                model: 'openai/gpt-4o-mini'
+            }
+        };
+
+        // === GLOBAL STATE ===
+        const state = {
+            currentTab: 'home',
+            stories: [],
+            feed: [],
+            user: {
+                id: 'u_' + Date.now().toString(36),
+                name: 'Guest',
+                avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=guest'
+            },
+            lastSync: null
+        };
+
+        // Placeholder data untuk feed (nanti diganti real data + AI)
+        const DEMO_FEED = [
+            {
+                id: 'f1',
+                user: { name: 'nova.studio', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=nova' },
+                media: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80',
+                caption: 'Sunset vibes di rooftop. Who else loves golden hour? ✨',
+                likes: 12840,
+                comments: 342,
+                shares: 89,
+                music: 'Original Sound - nova.studio'
+            },
+            {
+                id: 'f2',
+                user: { name: 'pixel.wander', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=pixel' },
+                media: 'https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=800&q=80',
+                caption: 'Abstract mood. Color therapy for the soul.',
+                likes: 8921,
+                comments: 156,
+                shares: 41,
+                music: 'Lo-fi Beat - Chillhop'
+            }
+        ];
+
+        // === RENDER FUNCTIONS (Bagian 1) ===
+        function renderStories() {
+            const bar = document.getElementById('stories-bar');
+            const tpl = document.getElementById('tpl-story');
+            bar.innerHTML = '';
+
+            // Add "Your Story"
+            const your = tpl.content.cloneNode(true);
+            your.querySelector('.story-avatar').src = state.user.avatar;
+            your.querySelector('.story-name').textContent = 'Your Story';
+            bar.appendChild(your);
+
+            // Demo stories
+            ['luna', 'kai', 'mira', 'rex', 'zoe'].forEach(name => {
+                const el = tpl.content.cloneNode(true);
+                el.querySelector('.story-avatar').src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`;
+                el.querySelector('.story-name').textContent = name;
+                bar.appendChild(el);
+            });
+        }
+
+        function renderFeed() {
+            const container = document.getElementById('main-feed');
+            const tpl = document.getElementById('tpl-feed-item');
+            container.innerHTML = '';
+
+            DEMO_FEED.forEach(item => {
+                const el = tpl.content.cloneNode(true);
+                el.querySelector('.feed-media').src = item.media;
+                el.querySelector('.user-avatar').src = item.user.avatar;
+                el.querySelector('.user-name').textContent = item.user.name;
+                el.querySelector('.caption').textContent = item.caption;
+                el.querySelector('.like-count').textContent = formatCount(item.likes);
+                el.querySelector('.comment-count').textContent = formatCount(item.comments);
+                el.querySelector('.share-count').textContent = formatCount(item.shares);
+                el.querySelector('.music-title').textContent = item.music;
+                container.appendChild(el);
+            });
+        }
+
+        function formatCount(n) {
+            if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+            if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+            return n.toString();
+        }
+
+        // === INIT ===
+        document.addEventListener('DOMContentLoaded', () => {
+            renderStories();
+            renderFeed();
+            console.log('[SuperFeed] Bagian 1 loaded — framework + feed siap');
+        });
+    </script>
+</body>
+                                                            </html>
